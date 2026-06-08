@@ -249,6 +249,29 @@ tr:hover td{background:var(--bg);}
 </style>
 </head>
 <body>
+
+<!-- ═══ LOGIN ═══════════════════════════════════════════════════════════ -->
+<div id="login-screen" style="position:fixed;inset:0;background:#1c1813;z-index:99999;display:flex;align-items:center;justify-content:center;">
+  <div style="background:#f5f0ea;border-radius:18px;padding:40px 36px;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.4);text-align:center;">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:42px;font-weight:700;color:#2d2318;line-height:1;letter-spacing:-1px;">R<span style="font-weight:300">&amp;</span>S</div>
+    <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#8a7a6a;margin-bottom:30px;margin-top:4px">ESSENCE LAB</div>
+    <div style="margin-bottom:14px;text-align:left">
+      <label style="display:block;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#8a7a6a;margin-bottom:6px">Usuario</label>
+      <input id="l-user" autocomplete="username" style="width:100%;background:#ede6db;border:1px solid #cfc0ac;border-radius:8px;color:#1c1813;font-family:'Jost',sans-serif;font-size:15px;padding:11px 13px;outline:none;box-sizing:border-box;" placeholder="Tu usuario">
+    </div>
+    <div style="margin-bottom:20px;text-align:left">
+      <label style="display:block;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#8a7a6a;margin-bottom:6px">Contraseña</label>
+      <input id="l-pass" type="password" autocomplete="current-password" style="width:100%;background:#ede6db;border:1px solid #cfc0ac;border-radius:8px;color:#1c1813;font-family:'Jost',sans-serif;font-size:15px;padding:11px 13px;outline:none;box-sizing:border-box;" placeholder="••••••••">
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:22px;justify-content:center;">
+      <input type="checkbox" id="l-rem" style="cursor:pointer;">
+      <label for="l-rem" style="font-size:13px;color:#8a7a6a;cursor:pointer;">Recordarme</label>
+    </div>
+    <button onclick="doLogin()" style="width:100%;background:#2d2318;color:#fff;border:none;border-radius:8px;font-family:'Jost',sans-serif;font-size:14px;font-weight:500;padding:13px;cursor:pointer;">Ingresar</button>
+    <div id="l-err" style="color:#8a3030;font-size:12px;margin-top:12px;min-height:18px;"></div>
+  </div>
+</div>
+
 <div class="layout">
 
 <!-- SIDEBAR -->
@@ -841,4 +864,5 @@ document.getElementById('pdate').textContent=new Date().toLocaleDateString('es-A
 </script>
 </body>
 </html>
+
 
