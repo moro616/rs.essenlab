@@ -389,7 +389,7 @@ var PedItems=[],LotIngrs=[],PedFilt='todos',CatFilt='Todos',TAB='dashboard';
 
 // ── Supabase ─────────────────────────────────────────────────────────
 var SB_URL='https://tnvdqnuifjbhudpwhepd.supabase.co';
-var SB_KEY='sb_publishable_PNyll9j_pzWY2i_mZG8j8A_NXErpuhP';                   
+var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRudmRxbnVpZmpiaHVkcHdoZXBkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5MjI5NzcsImV4cCI6MjA5NjQ5ODk3N30.AswRac1uJ6yZEumyFJ-Rl0p8Wn7rNLEKmiuII56yi3Q';                   
 var SB=supabase.createClient(SB_URL,SB_KEY);
 function showSync(ok){var e=document.getElementById('sync-dot');if(!e)return;e.style.background=ok?'#4a7a55':'#c0392b';setTimeout(function(){e.style.background='#ccc';},2000);}
 function sbUp(t,r){SB.from(t).upsert(r).then(function(x){showSync(!x.error);if(x.error)console.error('sbUp',t,x.error);});}
@@ -841,3 +841,4 @@ document.getElementById('pdate').textContent=new Date().toLocaleDateString('es-A
 </script>
 </body>
 </html>
+
