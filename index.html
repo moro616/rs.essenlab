@@ -298,11 +298,11 @@ tr:hover td{background:var(--bg);}
 <div class="main-area">
   <div class="topbar">
     <div class="page-title" id="ptitle">Dashboard</div>
-    <div style="display:flex;align-items:center;gap:10px"><span id="sync-dot" title="Sincronizado" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#ccc;transition:background .4s"></span><div class="topbar-date" id="pdate"></div></div>
+    <div style="display:flex;align-items:center;gap:12px"><span id="sync-dot" title="Sincronizado" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#ccc;transition:background .4s"></span><div class="topbar-date" id="pdate"></div><button onclick="logout()" title="Cerrar sesión" style="background:none;border:1px solid #e0d5c5;border-radius:7px;color:#8a7a6a;font-family:'Jost',sans-serif;font-size:12px;padding:5px 10px;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;" onmouseover="this.style.borderColor='#8b6f52';this.style.color='#6b5240'" onmouseout="this.style.borderColor='#e0d5c5';this.style.color='#8a7a6a'"><span>⎋</span><span class="hm">Cerrar sesión</span></button></div>
   </div>
   <div class="content" id="content"></div>
   <!-- FOOTER -->
-  <div style="text-align:center;padding:14px 20px;font-size:11px;color:#b0a090;letter-spacing:.4px;border-top:1px solid #e0d5c5;background:#f5f0ea;flex-shrink:0;">
+  <div style="text-align:center;padding:14px 20px 72px;font-size:11px;color:#b0a090;letter-spacing:.4px;border-top:1px solid #e0d5c5;background:#f5f0ea;flex-shrink:0;">
     Creado por <strong style="color:#8b6f52">Lucas Morosin</strong> &nbsp;·&nbsp; &copy; 2026 Todos los derechos reservados &nbsp;·&nbsp; <em>Metrics Lab Agency</em>
   </div>
 </div>
@@ -424,13 +424,13 @@ var PedItems=[],LotIngrs=[],PedFilt='todos',CatFilt='Todos',TAB='dashboard';
 
 // ══ LOGIN ════════════════════════════════════════════════════════════
 var USERS={'Silvia26':'R29sbGFuMjIxNkA=','Rousi26':'RmVsaXBlMjAyNkA=','admin':'R29sbGFuMzQ4MzE1MTFA'};
-function logout(){localStorage.removeItem('rs_sess');document.getElementById('login-screen').style.display='flex';}
+function logout(){localStorage.removeItem('rs_user');document.getElementById('login-screen').style.display='flex';document.getElementById('l-pass').value='';}
 function doLogin(){
   var u=document.getElementById('l-user').value.trim();
   var p=document.getElementById('l-pass').value;
   if(!u||!p){document.getElementById('l-err').textContent='Completá usuario y contraseña';return;}
   if(USERS[u]&&btoa(p)===USERS[u]){
-    if(document.getElementById('l-rem').checked){localStorage.setItem('rs_sess',btoa(u+':'+Date.now()));}
+    if(document.getElementById('l-rem').checked){localStorage.setItem('rs_user',u);}
     document.getElementById('login-screen').style.display='none';
   }else{
     document.getElementById('l-err').textContent='Usuario o contraseña incorrectos';
@@ -444,7 +444,10 @@ function togglePass(){
   else{inp.type='password';btn.textContent='👁';}
 }
 document.addEventListener('keydown',function(e){if(e.key==='Enter'&&document.getElementById('login-screen').style.display!=='none')doLogin();});
-(function(){var s=localStorage.getItem('rs_sess');if(s){try{var parts=atob(s).split(':');var age=Date.now()-parseInt(parts[1]);if(age<30*24*3600000&&USERS[parts[0]]){document.getElementById('login-screen').style.display='none';}}catch(e){}}})();
+(function(){
+  var saved=localStorage.getItem('rs_user');
+  if(saved&&USERS[saved]){document.getElementById('l-user').value=saved;document.getElementById('l-rem').checked=true;}
+})();
 
 // ── Supabase ─────────────────────────────────────────────────────────
 var SB_URL='https://tnvdqnuifjbhudpwhepd.supabase.co';
@@ -900,3 +903,4 @@ document.getElementById('pdate').textContent=new Date().toLocaleDateString('es-A
 </script>
 </body>
 </html>
+
