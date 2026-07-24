@@ -1,0 +1,29 @@
+# Keep-alive de la base Supabase de R&S Essence Lab.
+# El plan gratuito de Supabase pausa el proyecto tras 7 días sin actividad.
+# Este workflow hace un ping mínimo a la base cada 3 días desde los
+# servidores de GitHub, así la base nunca se pausa.
+# La "apikey" es la anon key PÚBLICA (ya visible en index.html); con RLS
+# activo no da acceso a ningún dato, solo mantiene viva la base.
+#
+# Se puede correr a mano desde: pestaña "Actions" → "keepalive-supabase" → "Run workflow".
+name: keepalive-supabase
+
+on:
+  schedule:
+    # cron en UTC. Corre a las 09:17 UTC los días 1,4,7,... del mes (cada 3 días).
+    - cron: '17 9 */3 * *'
+  workflow_dispatch: {}   # permite ejecutarlo manualmente
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase para evitar auto-pausa
+        run: |
+          KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRudmRxbnVpZmpiaHVkcHdoZXBkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5MjI5NzcsImV4cCI6MjA5NjQ5ODk3N30.AswRac1uJ6yZEumyFJ-Rl0p8Wn7rNLEKmiuII56yi3Q"
+          echo "Pinging Supabase..."
+          curl -sS -o /dev/null -w "Respuesta HTTP: %{http_code}\n" \
+            "https://tnvdqnuifjbhudpwhepd.supabase.co/rest/v1/productos?select=id&limit=1" \
+            -H "apikey: $KEY" \
+            -H "Authorization: Bearer $KEY"
+          echo "Keep-alive completado."
