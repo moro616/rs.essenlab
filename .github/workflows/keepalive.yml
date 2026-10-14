@@ -1,29 +1,63 @@
-# Keep-alive de la base Supabase de R&S Essence Lab.
-# El plan gratuito de Supabase pausa el proyecto tras 7 días sin actividad.
-# Este workflow hace un ping mínimo a la base cada 3 días desde los
-# servidores de GitHub, así la base nunca se pausa.
-# La "apikey" es la anon key PÚBLICA (ya visible en index.html); con RLS
-# activo no da acceso a ningún dato, solo mantiene viva la base.
+# ═══════════════════════════════════════════════════════════════════════
+#  Keep-alive de la base Supabase de R&S Essence Lab
+#  Proyecto: rs-essence-lab (wlgwqkorjufloshuthhn)
 #
-# Se puede correr a mano desde: pestaña "Actions" → "keepalive-supabase" → "Run workflow".
+#  El plan gratuito de Supabase pausa el proyecto tras 7 días sin
+#  actividad. Este workflow le hace un ping cada 2 días.
+#
+#  GitHub desactiva los workflows programados si el repo pasa 60 días
+#  sin actividad (eso fue lo que pasó antes). Por eso, además del ping,
+#  el workflow guarda la fecha en .keepalive y la commitea: el repo
+#  nunca queda inactivo.
+#
+#  La clave es la Publishable key PÚBLICA (la misma que está en el
+#  index.html). Con RLS activo no da acceso a ningún dato.
+#
+#  Correrlo a mano: pestaña Actions → keepalive-supabase → Run workflow.
+# ═══════════════════════════════════════════════════════════════════════
 name: keepalive-supabase
 
 on:
   schedule:
-    # cron en UTC. Corre a las 09:17 UTC los días 1,4,7,... del mes (cada 3 días).
-    - cron: '17 9 */3 * *'
-  workflow_dispatch: {}   # permite ejecutarlo manualmente
+    - cron: '17 9 */2 * *'   # cada 2 días, 09:17 UTC (06:17 en Argentina)
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+env:
+  SB_URL: https://wlgwqkorjufloshuthhn.supabase.co
+  SB_KEY: sb_publishable_g8TB9AIUfIEc98JJ6W8qZg_Pbf303v6
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Supabase para evitar auto-pausa
+      - uses: actions/checkout@v4
+
+      - name: Ping a Supabase
         run: |
-          KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRudmRxbnVpZmpiaHVkcHdoZXBkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5MjI5NzcsImV4cCI6MjA5NjQ5ODk3N30.AswRac1uJ6yZEumyFJ-Rl0p8Wn7rNLEKmiuII56yi3Q"
-          echo "Pinging Supabase..."
-          curl -sS -o /dev/null -w "Respuesta HTTP: %{http_code}\n" \
-            "https://tnvdqnuifjbhudpwhepd.supabase.co/rest/v1/productos?select=id&limit=1" \
-            -H "apikey: $KEY" \
-            -H "Authorization: Bearer $KEY"
-          echo "Keep-alive completado."
+          ok=0
+          for intento in 1 2 3; do
+            CODE=$(curl -sS -o resp.txt -w "%{http_code}" --max-time 30 \
+              "$SB_URL/rest/v1/productos?select=id&limit=1" \
+              -H "apikey: $SB_KEY" || echo 000)
+            echo "Intento $intento → HTTP $CODE"
+            head -c 300 resp.txt 2>/dev/null; echo
+            if [ "$CODE" != "000" ] && [ "$CODE" -lt 500 ]; then ok=1; break; fi
+            sleep 20
+          done
+          if [ "$ok" != "1" ]; then
+            echo "::error::Supabase no respondió. Puede estar pausada: reanudala desde supabase.com/dashboard."
+            exit 1
+          fi
+          echo "Base despierta. Contador de inactividad en cero."
+
+      - name: Marcar actividad en el repo
+        run: |
+          date -u +"Último ping a Supabase: %Y-%m-%d %H:%M UTC" > .keepalive
+          git config user.name  "keepalive-bot"
+          git config user.email "keepalive-bot@users.noreply.github.com"
+          git add .keepalive
+          git diff --staged --quiet || git commit -m "keepalive $(date -u +%Y-%m-%d)"
+          git push
