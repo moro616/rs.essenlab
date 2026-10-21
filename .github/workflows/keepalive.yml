@@ -3,7 +3,9 @@
 #  Proyecto: rs-essence-lab (wlgwqkorjufloshuthhn)
 #
 #  El plan gratuito de Supabase pausa el proyecto tras 7 días sin
-#  actividad. Este workflow le hace un ping cada 2 días.
+#  actividad. Este workflow llama todos los días a la función keepalive_ping(),
+#  que escribe la fecha en la tabla keepalive: actividad real en la base
+#  (ver 03-keepalive.sql). Solo da verde si la base contesta 200.
 #
 #  GitHub desactiva los workflows programados si el repo pasa 60 días
 #  sin actividad (eso fue lo que pasó antes). Por eso, además del ping,
@@ -19,7 +21,7 @@ name: keepalive-supabase
 
 on:
   schedule:
-    - cron: '17 9 */2 * *'   # cada 2 días, 09:17 UTC (06:17 en Argentina)
+    - cron: '17 9 * * *'     # todos los días, 09:17 UTC (06:17 en Argentina)
   workflow_dispatch: {}
 
 permissions:
@@ -40,18 +42,19 @@ jobs:
           ok=0
           for intento in 1 2 3; do
             CODE=$(curl -sS -o resp.txt -w "%{http_code}" --max-time 30 \
-              "$SB_URL/rest/v1/productos?select=id&limit=1" \
-              -H "apikey: $SB_KEY" || echo 000)
+              -X POST "$SB_URL/rest/v1/rpc/keepalive_ping" \
+              -H "apikey: $SB_KEY" -H "Content-Type: application/json" \
+              -d '{}' || echo 000)
             echo "Intento $intento → HTTP $CODE"
             head -c 300 resp.txt 2>/dev/null; echo
-            if [ "$CODE" != "000" ] && [ "$CODE" -lt 500 ]; then ok=1; break; fi
+            if [ "$CODE" = "200" ]; then ok=1; break; fi
             sleep 20
           done
           if [ "$ok" != "1" ]; then
-            echo "::error::Supabase no respondió. Puede estar pausada: reanudala desde supabase.com/dashboard."
+            echo "::error::La base no registró el ping (HTTP $CODE). Si está pausada, reanudala desde supabase.com/dashboard."
             exit 1
           fi
-          echo "Base despierta. Contador de inactividad en cero."
+          echo "Base despierta. Último ping registrado: $(cat resp.txt)"
 
       - name: Marcar actividad en el repo
         run: |
