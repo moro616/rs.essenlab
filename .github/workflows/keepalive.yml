@@ -3,7 +3,7 @@
 #  Proyecto: rs-essence-lab (wlgwqkorjufloshuthhn)
 #
 #  El plan gratuito de Supabase pausa el proyecto tras 7 días sin
-#  actividad. Este workflow llama todos los días a la función keepalive_ping(),
+#  actividad. Este workflow llama cada 3 horas a la función keepalive_ping(),
 #  que escribe la fecha en la tabla keepalive: actividad real en la base
 #  (ver 03-keepalive.sql). Solo da verde si la base contesta 200.
 #
@@ -21,7 +21,7 @@ name: keepalive-supabase
 
 on:
   schedule:
-    - cron: '17 9 * * *'     # todos los días, 09:17 UTC (06:17 en Argentina)
+    - cron: '17 */3 * * *'   # cada 3 horas (8 veces por día)
   workflow_dispatch: {}
 
 permissions:
@@ -40,17 +40,18 @@ jobs:
       - name: Ping a Supabase
         run: |
           ok=0
-          for intento in 1 2 3; do
+          for intento in 1 2 3 4 5; do
             CODE=$(curl -sS -o resp.txt -w "%{http_code}" --max-time 30 \
               -X POST "$SB_URL/rest/v1/rpc/keepalive_ping" \
               -H "apikey: $SB_KEY" -H "Content-Type: application/json" \
               -d '{}' || echo 000)
             echo "Intento $intento → HTTP $CODE"
             head -c 300 resp.txt 2>/dev/null; echo
-            if [ "$CODE" = "200" ]; then ok=1; break; fi
+            if [ "$CODE" = "200" ]; then ok=$((ok+1)); fi
+            [ "$ok" -ge 3 ] && break
             sleep 20
           done
-          if [ "$ok" != "1" ]; then
+          if [ "$ok" -lt 1 ]; then
             echo "::error::La base no registró el ping (HTTP $CODE). Si está pausada, reanudala desde supabase.com/dashboard."
             exit 1
           fi
@@ -58,7 +59,7 @@ jobs:
 
       - name: Marcar actividad en el repo
         run: |
-          date -u +"Último ping a Supabase: %Y-%m-%d %H:%M UTC" > .keepalive
+          date -u +"Último día con ping a Supabase: %Y-%m-%d" > .keepalive
           git config user.name  "keepalive-bot"
           git config user.email "keepalive-bot@users.noreply.github.com"
           git add .keepalive
